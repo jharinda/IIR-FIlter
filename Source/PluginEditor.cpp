@@ -15,7 +15,7 @@ IIRFilterAudioProcessorEditor::IIRFilterAudioProcessorEditor (IIRFilterAudioProc
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (400, 300);
+    setSize (300, 100);
 
     filterTypeMenu.addItem("All Pass", 1);
     filterTypeMenu.addItem("Low Pass", 2);

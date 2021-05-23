@@ -126,55 +126,57 @@ void IIRFilterAudioProcessor::updateFilter()
     float resonance = *treeState.getRawParameterValue(filterResonanceId);
     float gainFactor = *treeState.getRawParameterValue(filterGainFactorId);
 
+
     if (filterChoice == 0)
     {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeAllPass(lastSampleRate, cutoff);
-
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeFirstOrderAllPass(lastSampleRate, cutoff);
     }
+    
 
     if (filterChoice == 1)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, cutoff, resonance);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeLowPass(lastSampleRate, cutoff, resonance);
+   
 
     if (filterChoice == 2)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeBandPass(lastSampleRate, cutoff, resonance);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeBandPass(lastSampleRate, cutoff, resonance);
+    
 
    if (filterChoice == 3)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeHighPass(lastSampleRate, cutoff, resonance);
+  
 
     if (filterChoice == 4)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makePeakFilter(lastSampleRate, cutoff, resonance, gainFactor);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makePeakFilter(lastSampleRate, cutoff, resonance, gainFactor);
+
     if (filterChoice == 5)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighShelf(lastSampleRate, cutoff, resonance, gainFactor);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeHighShelf(lastSampleRate, cutoff, resonance, gainFactor);
+    
     if (filterChoice == 6)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowShelf(lastSampleRate, cutoff, resonance, gainFactor);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeLowShelf(lastSampleRate, cutoff, resonance, gainFactor);
+    
     if (filterChoice == 7)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeNotch(lastSampleRate, cutoff, resonance);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeNotch(lastSampleRate, cutoff, resonance);
+    
     if (filterChoice == 8)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeFirstOrderAllPass(lastSampleRate, cutoff);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeAllPass(lastSampleRate, cutoff);
+    
     if (filterChoice == 9)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeFirstOrderHighPass(lastSampleRate, cutoff);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeFirstOrderHighPass(lastSampleRate, cutoff);
+  
     if (filterChoice == 10)
-    {
-        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeFirstOrderLowPass(lastSampleRate, cutoff);
-    }
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::
+            makeFirstOrderLowPass(lastSampleRate, cutoff);
+    
 
 }
 
