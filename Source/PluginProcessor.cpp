@@ -12,16 +12,30 @@
 //==============================================================================
 IIRFilterAudioProcessor::IIRFilterAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
-     : AudioProcessor (BusesProperties()
-                     #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
-                       )
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+    ),treeState(*this, nullptr),
+    iirFilter(juce::dsp::IIR::Coefficients<float>::makeLowPass(44100,defaultFilterCutoff,defaultFilterResonance))
 #endif
 {
+    juce::NormalisableRange<float> filterCutoffRange(minFilterCutoff, maxFilterCutoff);
+    filterCutoffRange.setSkewForCentre(1000.0f);
+
+    juce::NormalisableRange<float> filterResonanceRange(minFilterResonance, maxFilterResonance);
+    juce::NormalisableRange<float> filterTypeMenuRange(minFilterTypeMenu, maxFilterTypeMenu);
+    juce::NormalisableRange<float> filterGainFactorRange(minFilterGainFactor, maxFilterGainFactor);
+
+    treeState.createAndAddParameter(filterCutoffId, filterCutoffName, filterCutoffName, filterCutoffRange, defaultFilterCutoff, nullptr, nullptr);
+    treeState.createAndAddParameter(filterResonanceId, filterResonanceName, filterResonanceName, filterResonanceRange, defaultFilterResonance, nullptr, nullptr);
+    treeState.createAndAddParameter(filterTypeMenuId, filterTypeMenuName, filterTypeMenuName, filterTypeMenuRange, defaultFilterTypeMenu, nullptr, nullptr);
+    treeState.createAndAddParameter(filterGainFactorId, filterGainFactorName, filterGainFactorName, filterGainFactorRange, defaultFilterGainFactor, nullptr, nullptr);
+
+    treeState.state = juce::ValueTree("Tree");
 }
 
 IIRFilterAudioProcessor::~IIRFilterAudioProcessor()
@@ -68,8 +82,7 @@ double IIRFilterAudioProcessor::getTailLengthSeconds() const
 
 int IIRFilterAudioProcessor::getNumPrograms()
 {
-    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    return 1;   
 }
 
 int IIRFilterAudioProcessor::getCurrentProgram()
@@ -93,14 +106,81 @@ void IIRFilterAudioProcessor::changeProgramName (int index, const juce::String& 
 //==============================================================================
 void IIRFilterAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    lastSampleRate = sampleRate;
+
+    juce::dsp::ProcessSpec spec;
+    
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getNumOutputChannels();
+    spec.sampleRate = lastSampleRate;
+    
+    updateFilter();
+    iirFilter.reset();
+    iirFilter.prepare(spec);
 }
+
+void IIRFilterAudioProcessor::updateFilter()
+{
+    int filterChoice = *treeState.getRawParameterValue(filterTypeMenuId);
+    float cutoff = *treeState.getRawParameterValue(filterCutoffId);
+    float resonance = *treeState.getRawParameterValue(filterResonanceId);
+
+    if (filterChoice == 0)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeAllPass(lastSampleRate, cutoff);
+
+    }
+
+    if (filterChoice == 1)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, cutoff, resonance);
+    }
+
+    if (filterChoice == 2)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+
+   if (filterChoice == 3)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+
+    if (filterChoice == 4)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+    if (filterChoice == 5)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+    if (filterChoice == 6)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+    if (filterChoice == 7)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+    if (filterChoice == 8)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+    if (filterChoice == 9)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+    if (filterChoice == 10)
+    {
+        *iirFilter.state = *juce::dsp::IIR::Coefficients<float>::makeHighPass(lastSampleRate, cutoff, resonance);
+    }
+
+}
+
 
 void IIRFilterAudioProcessor::releaseResources()
 {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
+
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -133,27 +213,13 @@ void IIRFilterAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+    /*for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());*/
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
+    
+    updateFilter();
+    juce::dsp::AudioBlock<float> block(buffer);
+    iirFilter.process(juce::dsp::ProcessContextReplacing<float>(block));
 }
 
 //==============================================================================
